@@ -1,0 +1,30 @@
+/*
+ * Code in support of ePrint:2021/xxxx
+ * Copyright 2021, Olivier Bernard
+ * GPL-3.0-only (see LICENSE file)
+ */
+
+/* To be launched as: magma -b nf:=<tag> d:=<max_#orbs>  */
+load "../src/nf_magma.m";
+SetClassGroupBounds("GRH");
+
+_DATA_FOLDER := data cat "/" cat nf cat "/";
+
+K  := nf_set_tag(nf);
+d  := StringToInteger(d);
+
+for orb in [1..d] do
+    printf "%o: Sunits for #orbs=%o", nf, orb;
+    fb := Sprintf(_DATA_FOLDER cat "%o_d%o.fb", nf, orb);
+    out:= Sprintf(_DATA_FOLDER cat "%o_d%o.su", nf, orb);
+    
+    FB := fb_in_stream(fb, K);
+    t  := Cputime();
+    y_u, y_su, B_su, B_vp:= get_raw_S_units(K, FB);
+    t  := Cputime(t);
+    printf "\t[done] n=%o hk=%o t=%o\n", Degree(K), ClassNumber(K), t; 
+    printf "--> output in '%o'\n", out;
+    sunits_raw_write_data(out, K, nf, y_u, y_su, B_su, B_vp);
+end for;
+
+exit;
