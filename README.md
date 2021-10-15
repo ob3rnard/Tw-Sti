@@ -2,7 +2,7 @@
 Code in support of the IACR ePrint Archive [ePrint:2021/1384](https://eprint.iacr.org/2021/1384):
 
 > **Log-S-unit lattices using Explicit Stickelberger Generators to solve Approx Ideal-SVP**  
-> Olivier Bernard, Tuong-Huy Nguyen, Andrea Lesavourey and Adeline Roux-Langlois
+> Olivier Bernard, Andrea Lesavourey, Tuong-Huy Nguyen and Adeline Roux-Langlois
 
 This work is supported by the European Union PROMETHEUS project (Horizon 2020 Research and Innovation Program, grant 780701).
 
@@ -133,7 +133,7 @@ This will redirect logs, detach thread(s), detect the number of orbits and the a
 
 ### License
 
-&copy; 2021, Olivier Bernard, Tuong-Huy Nguyen, Andrea Lesavourey and Adeline Roux-Langlois.  
+&copy; 2021, Olivier Bernard, Andrea Lesavourey, Tuong-Huy Nguyen and Adeline Roux-Langlois.  
 This work is published under the GNU General Public License (GPL) v3.0.  
 See the LICENSE file for complete statement.
 
