@@ -1,5 +1,5 @@
 # Tw-STI
-Code in support of the IACR ePrint Archive [ePrint:2021/xxxx](https://eprint.iacr.org/2021/xxxx):
+Code in support of the IACR ePrint Archive [ePrint:2021/1384](https://eprint.iacr.org/2021/1384):
 
 > **Log-S-unit lattices using Explicit Stickelberger Generators to solve Approx Ideal-SVP**  
 > Olivier Bernard, Tuong-Huy Nguyen, Andrea Lesavourey and Adeline Roux-Langlois
