@@ -1,7 +1,7 @@
 #!/usr/bin/env sage
 
 # Code in support of ePrint:2021/1384
-# Copyright 2021, Olivier Bernard, Andrea Lesavourey
+# Copyright 2021, Olivier Bernard, Andrea Lesavourey, Tuong-Huy Nguyen
 # GPL-3.0-only (see LICENSE file)
 
 # Small convenient hack to simulate as if we were always executing from '<trunk>/'
@@ -11,6 +11,7 @@ os.chdir(os.path.dirname(__file__) + "/../");
 sys.path.append("./src/");
 # --------------------------------------------------------------------------------------
 
+from time import time
 import itertools
 
 from sage.all import *
@@ -49,7 +50,9 @@ print ("{}: eval approx factor of log S-unit lattices".format(tag), flush=True);
 # Reduction parameters
 BLOCK_SZ  = 40;
 W_PREC    = 500;
-NB_ITER   = 80;
+
+# Computing power
+NB_CORES  = 8; # We definitely should make this an option of the script
 
 
 # ----------------------------------------------------------------------------------
@@ -216,6 +219,7 @@ for _d in [dmax-1]:
      
     # --------------------------------------------------------------------------------
     # Now, the real deal
+    t_all = time();
     for _k in range(len(targs)):
         print ("Challenge #{}:".format(_k));
         _t = targs[_k];
@@ -227,19 +231,20 @@ for _d in [dmax-1]:
         
         count_ops = 0;
         sols = []; # indexed by measure set
+        tglobal = time();
         for _s,_iso,_inf in itertools.product(opt_sets, opt_iso.keys(),opt_inf.keys()):
             # Indices
             ind = opt_sets.index(_s);
             assert(l_names[count_ops] == "{}/{}/{}".format(_s, _iso, _inf) and opt_sets[ind] == _s);
             
             # Apply Tw-PHS for one target
-            t = cputime();
+            t = time();
             print("\tmethod:'{}':".format(l_names[count_ops]), flush=True);
-            ls, ns = twphs_protocol2(_t, p_inf, fb, fHcE.get("{}/{}".format(_iso,_inf)),
-                                     B_bkz[count_ops], U_bkz[count_ops], la_SU_all[ind],
-                                     NB_ITER, inf_type=opt_inf.get(_inf), G=G_bkz[count_ops],
-                                     b_prec=W_PREC);
-            t = cputime(t);
+            ls, ns = twphs_random(_t, p_inf, fb, fHcE.get("{}/{}".format(_iso,_inf)),
+                                  B_bkz[count_ops], U_bkz[count_ops], la_SU_all[ind],
+                                  inf_type=opt_inf.get(_inf), set_tag=_s, G=G_bkz[count_ops],
+                                  nb_cores=NB_CORES, b_prec=W_PREC);
+            t = time()-t;
             print("\t[done] t2_norm={:7.3f} t={:.2f}".format(float(ns),t), flush=True);
             
             # Compute all ratios from sol
@@ -250,5 +255,11 @@ for _d in [dmax-1]:
         assert(len(af_rat) == len(measures_set));
         assert(all(len(_af) == len(l_names) for _af in af_rat));
         af_write_data(out_files, af_rat);
+
+        tglobal = time() - tglobal;
+        print("%% Challenge #{} [done] in t={:.2f} %%".format(_k,tglobal), flush=True);
+        
+    t_all = time() - t_all;
+    print('\n' + '[ALL DONE] in t={:.2f}'.format(t_all));
         
 exit;

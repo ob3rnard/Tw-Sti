@@ -1,5 +1,5 @@
 # Code in support of ePrint:2021/1384
-# Copyright 2021, Olivier Bernard, Andrea Lesavourey
+# Copyright 2021, Olivier Bernard, Andrea Lesavourey, Tuong-Huy Nguyen
 # GPL-3.0-only (see LICENSE file)
 
 import fp
@@ -259,11 +259,12 @@ def twphs_guess_beta(la, Vred, fb, inf='EXPANDED'):
 
 
 # computes drifted target in log_embedding from logarg la and drift beta
-def twphs_target_drift(la, beta, p_inf, fb, fHcE, inf_type='EXPANDED'):
+def twphs_target_drift_index(la, list_beta, p_inf, fb, fHcE, inf_type='EXPANDED'):
     Re = RealField(p_inf[0].codomain().precision());
-        
+    
     log_t   = logarg_log_embedding(la, p_inf, fb, inf_type=inf_type);
-    l_drift = vector(Re, [0]*(len(log_t)-len(fb)) + [beta]*len(fb));
+    assert(len(list_beta) == len(fb));
+    l_drift = vector(Re, [0]*(len(log_t)-len(fb)) + list_beta);
     t = (log_t + l_drift)*fHcE;
     return t;
 
@@ -277,74 +278,159 @@ def twphs_build_solution(la, y, U, SU_logarg):
 
 
 # Tw-query
-EXPANSION=1.15;
-def twphs_protocol2(la, p_inf, fb, fHcE, lsubkz, u_bkz, SU_logarg, nb_iter, inf_type='EXPANDED', G=0, b_prec=fp.BIT_PREC_DEFAULT):
+# -------------------------------------------------------------------------------------------------
+# Principle:
+#    1. First explore beta's values in a large range
+#    2. Explore more closely around the most promising beta
+#
+import multiprocessing
+from time import time
+
+# Specify an EVEN number of cores to be used for 1 challenge
+NB_CORES_DEFAULT = 8;
+MIN_NB_ITER      = 50;
+
+# Retain the best norms after coarse grid: at most NB_NORMS
+NB_NORMS      = 1; # Which threshold after coarse grid on norms
+# And consider the NB_FINER_GRID most interesting betas
+NB_FINER_GRID = 1; # Nb of rangers that we explore more thoroughly
+
+
+# First multiprocessing for coarse grid 
+def pool_init(p_inf, fb, fHcE, lsubkz, u_bkz, SU_logarg, inf_type, G):
+    global pool_p_inf, pool_fb, pool_fHcE, pool_lsubkz, pool_u_bkz, pool_SU_logarg, pool_inf_type, pool_G;
+    pool_p_inf     = p_inf;
+    pool_fb        = fb;
+    pool_fHcE      = fHcE;
+    pool_lsubkz    = lsubkz;
+    pool_u_bkz     = u_bkz;
+    pool_SU_logarg = SU_logarg;
+    pool_inf_type  = inf_type;
+    pool_G         = G;
+    return;
+
+
+def twphs_eval_func(x0, la, k):
+    t    = twphs_target_drift_index(la, x0, pool_p_inf, pool_fb, pool_fHcE, inf_type=pool_inf_type);
+    v, y = cvp_babai_NP(pool_lsubkz, t, G=pool_G);
+    ls   = twphs_build_solution(la, y, pool_u_bkz, pool_SU_logarg);
+    ns   = logarg_t2_norm_cf(ls);
+    s_in_a  = all(_ls_vp >= 0 for _ls_vp in ls.vp);
+    return (s_in_a, ns, ls, mean(x0), k);
+
+
+def get_first_range(la, Vred, fb, inf_type="EXPANDED", set_tag="sat", b_prec=fp.BIT_PREC_DEFAULT):
+    Re = RealField(b_prec);
+    beta_guess = twphs_guess_beta(la, Vred, fb, inf=inf_type);
+    n  = len(la.inf)*2;
+    print("\t\tbeta_guess (twphs)={:.4f}".format(float(beta_guess)), flush=True);
+    
+    # Experimentally we notice, from b = beta_guess:
+    # urs: exp is below (c = b*1.2), tw is just above (c = 0.8*b)
+    # sat: always twice two large (c = 1/2*b for exp, c=1/2*c*0.6 for tw)
+    # Crude linear regression from best results for z23, z73, z151 and z211
+    if inf_type == "EXPANDED":
+        beta_guess = beta_guess * (((0.603-0.839)/188.*(n-22)+0.839) if set_tag in ["sat","su"]
+                                   else ((1.234-.735)/188.*(n-22)+0.735));
+    else:
+        beta_guess = beta_guess * (((.4-.737)/188.*(n-22)+0.737) if set_tag in ["sat","su"]
+                                   else ((.981-.729)/188.*(n-22)+0.729));
+    print("\t\tAdjusted beta_guess={:.4f}".format(float(beta_guess)), flush=True);
+
+    # First range to test
+    beta_inf = beta_guess*0.5;
+    beta_sup = beta_guess*1.3;
+
+    return Re(beta_inf), Re(beta_sup);
+
+
+def twphs_random(la, p_inf, fb, fHcE, lsubkz, u_bkz, SU_logarg, inf_type='EXPANDED', set_tag="sat", G=0, nb_cores=NB_CORES_DEFAULT, b_prec=fp.BIT_PREC_DEFAULT):
+    nb_iter  = max(MIN_NB_ITER, ceil((len(p_inf)*2)*0.8)); # 0.8 * deg(K), ie. ~ 168 for m=211.
+    coarse_iter = 4*nb_iter;
+    finer_iter  = 8*nb_iter; # 8* ?
+
     Re = RealField(b_prec);
     assert(G!=0);
-    
-    # Norm challenge
-    Na   = round(exp(norm_from_logarg(la, fb)));
     # Reduced volume
     Vred = vol_reduced(lsubkz, gso=G);
 
-    # Set "BEST" at the worst possible element
-    best_norm = Na*sqrt(Re(2*len(la.inf))); #(logarg_t2_norm_cf(_ls));
-    best_s    = Na;
-    s_in_a = False;
-    beta_cur = Re(twphs_guess_beta(la, Vred, fb, inf=inf_type))/Re(EXPANSION);  assert(beta_cur > 0);
-    while (s_in_a == False):
-        beta_cur = beta_cur*Re(EXPANSION);
-        print ("\t\tbeta={:8.6f}".format(float(beta_cur)), flush=True, end='');
-        _t   = cputime();
-        t    = twphs_target_drift(la, beta_cur, p_inf, fb, fHcE, inf_type=inf_type);
-        v, y = cvp_babai_NP(lsubkz, t, G=G);
-        ls   = twphs_build_solution(la, y, u_bkz, SU_logarg);
-        ns   = (logarg_t2_norm_cf(ls));
-        _t   = cputime(_t);
-        s_in_a  = all(_ls_vp >= 0 for _ls_vp in ls.vp);
-        print ("\t[{}]\tl2={:7.3f} t={:.2f}".format(
-            s_in_a, float(ns), _t), flush=True);
+    # Generate processes equal to the number of cores
+    pool = multiprocessing.Pool(nb_cores, pool_init, initargs=(p_inf, fb, fHcE, lsubkz, u_bkz, SU_logarg, inf_type, G));
     
-    # Fine grained sampling
-    beta_sup = beta_cur;
-    beta_inf = beta_cur;
-    k=0;
-    while (s_in_a == True) and (k<10): # sometimes beta=0 is ok, so avoid infinite loop
-        beta_inf = beta_inf/Re(1.4);
-        print ("\t\tbeta={:8.6f}".format(float(beta_inf)), flush=True, end='');
-        _t   = cputime();
-        t    = twphs_target_drift(ls, beta_inf, p_inf, fb, fHcE, inf_type=inf_type);
-        v, y = cvp_babai_NP(lsubkz, t, G=G);
-        tst  = twphs_build_solution(ls, y, u_bkz, SU_logarg);
-        nt   = (logarg_t2_norm_cf(tst));
-        _t   = cputime(_t);
-        s_in_a  = all(_ls_vp >= 0 for _ls_vp in tst.vp);
-        print ("\t[{}]\tl2={:7.3f} t={:.2f}".format(
-            s_in_a, float(ns), _t), flush=True);
-        if (s_in_a) and (nt < ns): ls = tst; ns = nt;
-        k=k+1;
+    # Guess of starting beta
+    beta_inf, beta_sup = get_first_range(la, Vred, fb, inf_type=inf_type, set_tag=set_tag, b_prec=b_prec);
     
-    nb_intervals = nb_iter;
-    cur_t     = ls;
-    best_norm = logarg_t2_norm_cf(ls);
-    best_s    = ls;
-    for _i in range(1,nb_intervals):
-        beta_cur = beta_inf + Re(_i)*(beta_sup-beta_inf)/Re(nb_intervals);
-        print ("\t\tbeta={:8.6f}".format(float(beta_cur)), flush=True, end='');
-        _t   = cputime();
-        t    = twphs_target_drift(cur_t, beta_cur, p_inf, fb, fHcE, inf_type=inf_type);
-        v, y = cvp_babai_NP(lsubkz, t, G=G);
-        ls   = twphs_build_solution(cur_t, y, u_bkz, SU_logarg);
-        ns   = (logarg_t2_norm_cf(ls));
-        _t   = cputime(_t);
-        s_in_a  = all(_ls_vp >= 0 for _ls_vp in ls.vp);
-        print ("\t[{}]\tl2={:7.3f} t={:.2f}".format(
-            s_in_a, float(ns), _t), flush=True);
+    # Loop on ranges until we find one
+    found_one = False;
+    count     = 0;
+    t_global  = walltime();
+    while (found_one == False):
+        # Prepare all the points for evaluation
+        print("\t\tCoarse grid try:#{} range:[{:.4f},{:.4f}] #iter:{}".format(count+1, float(beta_inf), float(beta_sup), coarse_iter), flush=True);
+        coarse_betas       = [ uniform(beta_inf,beta_sup) for _ in range(coarse_iter) ];
+        coarse_eval_points = [];
+        for _k in range(len(coarse_betas)):
+            _b = coarse_betas[_k];
+            x0 = [_b + uniform(-1,1) for _ in range(len(fb))];
+            coarse_eval_points.append((x0, la, _k + count*coarse_iter));
+
+        # Distribute the parameter sets evenly across the cores
+        res  = pool.starmap(twphs_eval_func, coarse_eval_points);
+ 
+        # Update loop
+        found_one = any(_v[0] == True for _v in res);
+        count += 1;
+        beta_inf = beta_sup; # Consider we could not have missed one 
+        beta_sup = 1.5*beta_sup;
         
-        if (s_in_a == True):
-            best_s, best_norm = (ls, ns) if ns < best_norm else (best_s, best_norm);
-    cur_t = best_s;
-        
+    print("\t\tCoarse res: ", end='');
+    # Once we have at least one "True", sort to get the best norm and solution *after the coarse grid*
+    coarse_res = [ _r for _r in res if _r[0] == True ];
+    coarse_res = sorted(coarse_res, key=lambda v: v[3]);
+    print(("({:.2f},{:.2f}) "*(min(10,len(coarse_res)))).format(*sum(([float(_v[3]),float(_v[1])] for _v in coarse_res[:10]), [])), flush=True);
+    
+    # Take the first NB_NORMS  minimum
+    # NB: This is not necessarily of length NB_NORMS.
+    norms_list = sorted(list({ceil(v[1]) for v in coarse_res}))[:NB_NORMS];
+    print("\t\tRetained t2-norms: {}".format(norms_list), flush=True);
+    # betas of interest are those for which the returned norm is smaller (or equal to) 
+    betas_of_interest = sorted([v[3] for v in coarse_res if v[1] <= norms_list[-1]+0.1]);
+    print(("\t\tAdmissible betas: "+"{:.4f} "*(min(10,len(betas_of_interest)))).format(*list(map(float,betas_of_interest[:10]))), flush=True);
+    
+    # We get to define a finer range around betas_of_interest
+    bs = betas_of_interest[:NB_FINER_GRID];
+    beta_inf = [_b*0.9 for _b in bs];
+    beta_sup = [_b*1.1 for _b in bs];
+ 
+    print(("\t\tFiner exploration ranges:"+"[{:.4f},{:.4f}] "*len(beta_inf)+"#iter:{} [#iter/range:{}]").format(*sum(([float(_b0),float(_b1)] for _b0, _b1 in zip(beta_inf,beta_sup)), []), finer_iter, finer_iter//len(bs)), flush=True);
+    # Build beforehand the global list of all random trials
+    finer_betas       = sum(([ uniform(_b0,_b1) for _ in range(finer_iter//len(bs)) ]
+                             for _b0, _b1 in zip(beta_inf, beta_sup)), []);
+    finer_eval_points = [];
+    for _k in range(len(finer_betas)):
+        _b = finer_betas[_k];
+        x0 = [_b + uniform(-1,1) for _ in range(len(fb))];
+        finer_eval_points.append((x0, la, _k + count*coarse_iter));
+    
+    # Distribute the parameter sets evenly across the cores
+    finer_res = pool.starmap(twphs_eval_func, finer_eval_points);
+    finer_res = [_r for _r in finer_res if _r[0] == True];
+
+    # Clear pool
+    pool.close(); pool.join();
+
+    # Merge both results (coarse and finer) and get the best possible outcome.
+    all_res  = coarse_res + finer_res; assert(len(all_res) != 0);
+    all_res  = sorted(all_res, key=lambda v: v[3]);
+    best     = min(all_res, key=lambda v: v[1]); 
+    best_norm = best[1];
+    best_s    = best[2];
+    best_beta = best[3];
+    idx       = best[4];
+    
+    t_global = walltime(t_global);
+    print("\t\t[End] Best solution: beta={:.4f} \t[{}]\t l2={:7.3f} idx={} ({} cores) t={:.2f}".format(best_beta, all(_ls_vp >= 0 for _ls_vp in best_s.vp), float(best_norm), idx, nb_cores, t_global), flush=True)
+
     return best_s, best_norm;
 
 
