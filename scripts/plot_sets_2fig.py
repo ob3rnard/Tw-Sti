@@ -8,7 +8,6 @@ import os
 from os import path
 import sys
 import matplotlib.pyplot as plt
-from sage.misc.misc import cputime
 
 
 if len(sys.argv) != 4:

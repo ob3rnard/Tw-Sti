@@ -9,7 +9,6 @@ import os
 from os import path
 import sys
 import matplotlib.pyplot as plt
-from sage.misc.misc import cputime
 import statistics
 from sympy.ntheory.factor_ import totient
 import numpy as np
@@ -43,8 +42,6 @@ print('Drawing...')
 ## Choice d=1 for URS and sat
 chosen_orb = 1
 
-
-t = cputime()
 
 ## Get a dictionnary of the form {m : {d : [list of chosen values urs_set, sat_set, su_set] } }
 ## In this script the list only contain 3 values (at most): min(urs),min(sat),min(su)
@@ -136,7 +133,7 @@ ax.set_axisbelow(True)
 ax.xaxis.grid(color='lightgray', linestyle='dashed')
 ax.set_axisbelow(True)
 ax.yaxis.grid(color='lightgray', linestyle='dashed')
-ax.set_ylim([0,80])
+ax.set_ylim([0,40])
 
 handles, labels = ax.get_legend_handles_labels()
 plt.legend(handles, labels, loc='upper left',fontsize=12)
@@ -145,7 +142,7 @@ plt.legend(handles, labels, loc='upper left',fontsize=12)
 plt.savefig(os.path.dirname(os.getcwd()) +'/figures/GF.png')
 # plt.show()
 plt.close(fig)
-print("Done: minGF as fonction of field dimension in [t={:.2f}]".format(t))
+print("Done: minGF as fonction of field dimension")
 
 ## Draw the zoom (without URS)
 fig, ax = plt.subplots(figsize=(9.5, 4)) 
@@ -162,7 +159,7 @@ ax.xaxis.grid(color='lightgray', linestyle='dashed')
 ax.set_axisbelow(True)
 ax.yaxis.grid(color='lightgray', linestyle='dashed')
 ax.set_xlim([20,101])
-ax.set_ylim([0,5])
+ax.set_ylim([0,4])
 
 
 handles, labels = ax.get_legend_handles_labels()
@@ -171,4 +168,4 @@ plt.legend(handles, labels, loc='upper left',fontsize=12)
 plt.savefig(os.path.dirname(os.getcwd()) +'/figures/zoomGF.png')
 # plt.show()
 plt.close(fig)
-print("Done: zoom minGF as fonction of field dimension in [t={:.2f}]".format(t))
+print("Done: zoom minGF as fonction of field dimension")
