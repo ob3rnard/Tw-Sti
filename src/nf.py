@@ -145,6 +145,20 @@ def logarg_t2_norm_cf(la):
     return t2_n;
 
 
+# return ln N(b) from logarg of <a> = b . prod_{p in FB} p^vp
+# WARN: Works **only** with cyclotomic fields at this point
+#       Suppose b is coprime with FB.
+def logarg_lnSnorm_cf(la, fb):
+    assert (len(fb) == len(la.vp));
+    Re     = la.inf[0].parent();
+    b_prec = Re.precision();
+    ln_Nfb = [Re(pid_fast_norm(_pid).log(prec=b_prec)) for _pid in fb];
+    ln_Na  = Re(2)*sum(_la for _la in la.inf) - sum(_vp*_ln_Nfb for _vp, _ln_Nfb in zip(la.vp,ln_Nfb));
+    Na     = exp(ln_Na);
+    assert(fp.fp_check_zero("exp ln Nb in ZZ", [Na-round(Na)], target=b_prec, sloppy=True));
+    return ln_Na;
+
+
 # /!\ WARN: lifts only in the equation order ZZ[a] (K = Q(a))
 def logarg_lift_eqn_order(la, p_inf):
     # Number Field
@@ -267,7 +281,7 @@ def logarg_log_embedding(la, p_inf, fb=[], inf_type='TWISTED', fb_type='TWISTED'
     w_prec = p_inf[0].codomain().precision();
     Re     = RealField(w_prec);
     assert(len(la.inf) == len(p_inf) and len(p_inf) == get_nb_inf_places(K));
-    assert(len(la.vp)  == len(fb));
+    assert(len(la.vp)  >= len(fb));
     assert((inf_type in NF_LOG_TYPE) and (fb_type in NF_LOG_TYPE));
     
     r1, r2 = K.signature();

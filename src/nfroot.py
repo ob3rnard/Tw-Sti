@@ -47,7 +47,6 @@ def init_basis_latt(K):
 # use previous unimodular matrix U to start the reduction
 def update_basis_latt(K, U, Binf, bprec):
     dim = K.degree(); 
-    # print "done here"
     B = [-round(((2**bprec)*(Binf[i].real_part()))) for i in range(dim//2)];
     coeff = dim // 2;
     V = U/coeff;

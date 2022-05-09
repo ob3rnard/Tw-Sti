@@ -25,17 +25,6 @@ def proj_log(v):
     return ph;
 
 
-# return ln |b| from logarg of target
-def norm_from_logarg(la, fb):
-    Re     = la.inf[0].parent();
-    b_prec = Re.precision();
-    ln_Nfb = [Re(pid_fast_norm(_pid).log(prec=b_prec)) for _pid in fb];
-    ln_Na  = Re(2)*sum(_la for _la in la.inf) - sum(_vp*_ln_Nfb for _vp, _ln_Nfb in zip(la.vp,ln_Nfb));
-    Na     = exp(ln_Na);
-    assert(fp.fp_check_zero("exp ln Nb in ZZ", [Na-round(Na)], target=b_prec, sloppy=True)); # Sloppy option barely needed
-    return ln_Na;
-
-
 # return random ClDL (simulated) solution
 def random_targets(K, p_inf, fb,
                    chal_bsz = 100, nb_targets = 100, b_prec = fp.BIT_PREC_DEFAULT):
@@ -68,7 +57,7 @@ def random_targets(K, p_inf, fb,
         # Set simulated logarg representation
         la = logarg(inf = l_inf, args = vector(Re, [0]*len(l_inf)), vp = vp);
         assert(fp.fp_check_zero("sum a_s - sum a_p = ln Nb",
-                                [norm_from_logarg(la, fb) - Re(ln(p))], target=b_prec-50));
+                                [logarg_lnSnorm_cf(la, fb) - Re(ln(p))], target=b_prec-50));
         list_targets.append(la);
     
     return(list_targets);

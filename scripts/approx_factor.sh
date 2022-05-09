@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# cf ../data/list_ms
+# cf ../data/list_ms_pcmp
 
 # Root dir
 ROOT_DIR=$(dirname $(dirname $(readlink -f $0)));
@@ -22,22 +22,27 @@ LOGS_DIR="${ROOT_DIR}/logs";
 };
 
 
+# Multiprocess param
+NCORES=4; # This run will be launched on NCORES (for all targets, all fields successively)
+
 # Compute approached log-S-Unit lattices
 for m in "$@"; do
     nf="z$m";
     # Determine the max number of orbits.
-    # NB: for now we assume that if one type is present (urs/sat/su), it is present for all orbits.
-    d=0; until ! [[ -f "${DATA_DIR}/${nf}/${nf}_d$(($d+1)).urs" ]]; do d=$(($d+1)); done;
-    # Determine whether we have precomputed S-units
-    # NB: For Approx factors, we only include d > 1 when su=True.
-    if [[ -f "${DATA_DIR}/${nf}/${nf}_d$d.su" ]];  then su="su=true";   else su="su=false"; d=1; fi;
-    # Determine whether we have saturated elements
-    if [[ -f "${DATA_DIR}/${nf}/${nf}_d$d.sat" ]]; then sat="sat=true"; else sat="sat=false"; fi;
+    durs=0; until ! [[ -f "${DATA_DIR}/${nf}/${nf}_d$(($durs+1)).urs" ]]; do durs=$(($durs+1)); done;
+    dsat=0; until ! [[ -f "${DATA_DIR}/${nf}/${nf}_d$(($dsat+1)).sat" ]]; do dsat=$(($dsat+1)); done;
+    dsu=0;  until ! [[ -f "${DATA_DIR}/${nf}/${nf}_d$(($dsu+1)).su"   ]]; do dsu=$(($dsu+1));   done;
 
-    for di in `seq 1 1 $d`; do
-        echo "Simulate IdSVP Solve using Tw-PHS for Q(z$m) [orb=#$di,$sat,$su]";
-        sage ${EXE_DIR}/approx_factor.sage ${DATA_DIR} $nf $di $sat $su 1>${LOGS_DIR}/${nf}_${di}.aflog 2>&1 &
-    done;
-done;
+    # Experience gives best results for durs=dsat=1, dsu=dmax
+    durs=1; dsat=1;
+    
+    echo "Simulate IdSVP Solve using Tw-PHS for Q(z$m) [durs=$durs,dsat=$dsat,dsu=$dsu]";
+    for suset in "urs" "sat" "su"; do
+        dname="d${suset}"; dm=${!dname}; # Now, $dm=$durs or $dsat or $dsu according to $suset
+        for di in `seq 1 1 $dm`; do
+            sage ${EXE_DIR}/approx_factor.sage ${DATA_DIR} ${NCORES} ${nf} ${di} set=${suset} 1>${LOGS_DIR}/${nf}_d${di}.aflog_${suset} 2>&1 ;
+        done;
+    done &
+done ;
 
 exit 0;

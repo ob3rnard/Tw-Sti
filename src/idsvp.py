@@ -2,8 +2,11 @@
 # Copyright 2021, Olivier Bernard, Andrea Lesavourey, Tuong-Huy Nguyen
 # GPL-3.0-only (see LICENSE file)
 
+from sage.all import *
+
 import fp
 from lattice import *      # svp / bkz
+from pideal import *       # fast_norm()
 from nf import *           # NF_INFP_BPREC_SCALE
 from cyclotomics import *  # cf_orbit_p()
 
@@ -244,7 +247,6 @@ def twphs_get_matrix_logarg(la_su, p_inf, fb, inf_type='EXPANDED', fb_type='TWIS
 
 # -------------------------------------------------------------------------------------------------
 # 3. GET TARGET AFTER CLDL
-from random_log_elt import* # for "norm_from_logarg"
 
 # Taken from [BR20] code and adapted to logargs
 def twphs_guess_beta(la, Vred, fb, inf='EXPANDED'):
@@ -254,7 +256,7 @@ def twphs_guess_beta(la, Vred, fb, inf='EXPANDED'):
     _k = len(fb);
     _sum = sum(ln(Re(pid_fast_norm(_pid))) for _pid in fb);
     
-    beta= Re( (_k+_n)/_n*Vred + norm_from_logarg(la, fb)/_n - _sum/_n - ln(pid_fast_norm(fb[0])));
+    beta= Re( (_k+_n)/_n*Vred + logarg_lnSnorm_cf(la, fb)/_n - _sum/_n - ln(pid_fast_norm(fb[0])));
     return beta;
 
 
@@ -432,6 +434,54 @@ def twphs_random(la, p_inf, fb, fHcE, lsubkz, u_bkz, SU_logarg, inf_type='EXPAND
     print("\t\t[End] Best solution: beta={:.4f} \t[{}]\t l2={:7.3f} idx={} ({} cores) t={:.2f}".format(best_beta, all(_ls_vp >= 0 for _ls_vp in best_s.vp), float(best_norm), idx, nb_cores, t_global), flush=True)
 
     return best_s, best_norm;
+
+
+
+# -------------------------------------------------------------------------------------------------
+# 4. CDW STRATEGY ("à la DPW") 
+
+def put_pos_Sminus(a):
+    b = copy(a);
+    v = vector(ZZ, len(a)//2);
+    for i in range(len(a)//2):
+        m = min(b[i], b[len(a)-i-1]);
+        b[i] -= m;
+        b[len(a)-i-1] -= m;
+        v[i] = m;
+    return v;
+
+# proj of a in ZZ[G] into ZZ[G]/(1+tau) as in [CDW21]
+def proj_Sminus_cdw(a):
+    r = len(a)//2
+    b = [a[i]-a[2*r-1-i] for i in range(r)];
+    return vector(b);
+
+
+def cdw_protocol(la, p_inf, fb, fHcE, B_logU, u_logU, Uc_logarg,
+                 B_sti, u_sti, Rgens_logarg, Sgens_logarg, G_logU=0, G_sti=0,
+                 inf_type='EXPANDED', b_prec=fp.BIT_PREC_DEFAULT):
+    Re = RealField(b_prec);
+    
+    # CVP in pi(Sm)
+    v, y   = cvp_babai_NP(B_sti, proj_Sminus_cdw(la.vp), G=G_sti);
+    _lcorr = logarg_mpow(Sgens_logarg, list(-y*u_sti));
+    ls = logarg_mul2(la, _lcorr);
+
+    # Lift to obtain all vp > 0
+    y_corr = put_pos_Sminus(ls.vp);
+    if (y_corr != zero_vector(ZZ, len(y_corr))):
+        _lcorr = logarg_mpow(Rgens_logarg, list(-y_corr));
+        ls = logarg_mul2(ls, _lcorr);
+
+    # CVP with log-unit
+    t_lu   = logarg_log_embedding(ls, p_inf, fb=[], inf_type=inf_type) * fHcE;
+    v, y   = cvp_babai_NP(B_logU, t_lu, G=G_logU);
+    _lcorr = logarg_mpow(Uc_logarg, list(-y*u_logU));
+    ls = logarg_mul2(ls, _lcorr);
+    ns = Re(logarg_t2_norm_cf(ls));
+    print("\tAfter Sti/pos/LogU\t{:.2f}".format(float(ns)));
+
+    return ls, ns;
 
 
 # //-- END OF FILE

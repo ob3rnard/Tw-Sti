@@ -11,7 +11,7 @@ from cyclotomics import * # cf_get_conductor()
 # -------------------------------------------------------------------------------------------------
 # KUCERA
 # Adapting [Kuc92] "On bases of the Stickelberger ideal and of the group of circular units of a cyclotomic field"
-# The "alpha" function correspond to a new paper:
+# The "alpha" function corresponds to a new paper:
 #          [BK21] "A short basis of the Stickelberger ideal of a cyclotomic field"
 
 

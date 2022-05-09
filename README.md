@@ -27,7 +27,7 @@ __FPLLL_PATH = "/usr/local/bin/";
 
 ### Computational workflow
 
-Note that `./data/list_ms_pcmp` contains the list of cyclotomic fields conductors for which h+=1 is known/computable, and of degree 20 < n < 192.
+Note that `./data/list_ms_pcmp` contains the list of cyclotomic fields conductors for which h+=1 is known/computable, and of degree 20 < n < 210.
 
 For simplicity, we suppose that everything is executed from `./scripts`, but it should work from everywhere. The conductor of the targetted cyclotomic field is `<m>`. Each script accepts a list of conductors, but beware that one or several threads will be launched for **each** of the conductors in the list.
 
@@ -64,10 +64,11 @@ For simplicity, we suppose that everything is executed from `./scripts`, but it 
 ```
 ./eval_geo.sh <m>
 ```
-9. Simulate approximation factors on 100 random targets for split prime ideals of size 2^100:
+9. Simulate approximation factors on 100 random targets for split prime ideals of size 2^100, and also run CDW on these targets:
 ```
 ./rand_targets.sh <m>
-./approx_factor.sh <m>                                                                             
+./approx_factor.sh <m>
+./cdw_protocol.sh <m>
 ```
 
 
@@ -75,28 +76,29 @@ For simplicity, we suppose that everything is executed from `./scripts`, but it 
 
 First, create a `./figures` folder besides the `./scripts` folder.
 
-##### Obtaining Fig. 1.1 (also 5.3) and 5.4 
-Run the `plot_minGF.py` script:
+##### Obtaining Fig. 1.1, 5.3 and 5.4 
+Run the `plot_preproc.sage` and then the `plot_minGF.py` script:
 ```
+./plot_preproc.sage
 ./plot_minGF.py
 ```
-This creates files `GF.png` (Fig.1.1 and 5.3) and `zoomGF.png` (Fig.5.4) in folder `./figures`.
+This creates files `GF_CDW_noURS-mprandom2.png` (Fig.1.1), `GF_CDW-mprandom2.png` (Fig.5.2) and `zoomGF_with_cdw_lower-mprandom2.png` (Fig.5.3) in folder `./figures`.
 
 
-##### Obtaining Fig. 5.1
-Run the `plot_sets_2fig.py` script with two chosen conductors m1 and m2 for orb orbits as:
-```
-./plot_sets_2fig.py <orb> <m1> <m2>
-```
-This creates file `z<m1>-z<m2>_comparison_sets_d<orb>.png` in folder `./figures`.
-
-
-##### Obtaining Fig. 5.2
+##### Obtaining Fig. 5.1, C.1-3
 Run the `plot_raw_bkz_2fig.py` script with two chosen conductors m1 and m2 for orb orbits as:
 ```
 ./plot_raw_bkz_2fig.py <orb> <m1> <m2>
 ```
 This creates file `z<m1>-z<m2>_comparison_raw_bkz_d<orb>.png` in folder `./figures`.
+
+
+##### Obtaining Fig. C.4
+Run the `plot_sets_2fig.py` script with two chosen conductors m1 and m2 for orb orbits as:
+```
+./plot_sets_2fig.py <orb> <m1> <m2>
+```
+This creates file `z<m1>-z<m2>_comparison_sets_d<orb>.png` in folder `./figures`.
 
 
 
