@@ -60,20 +60,25 @@ for m in list_m:
 
 
 
-
 # --------------------------------------------------------------------------------------
-# Draw without CDW
+# Draw with CDW and CDW lower bound for introduction
 fig, ax = plt.subplots(figsize=(9.5, 4)) 
 
-# Draw URS
-ax.scatter(X["all"], Y["urs"], marker="s",s=10, color='b',
-           label='URS (d=1)');
+# Draw URS 
+ax.scatter(X["all"], Y["urs"], marker="s", s=10, color='b',
+           label='Our first approx. of the S-units');
 # Draw sat 
-ax.scatter(X["all"], Y["sat"], marker='o',s=10, color='orange',
-           label='2-saturated URS (d=1)');
+ax.scatter(X["all"], Y["sat"], marker='o', s=10, color='orange',
+           label='Our 2-sat. approx. of the S-units');
 # Draw su 
-ax.scatter(X["su"], Y["su"], marker='^',s=10, facecolor='None', edgecolor='purple',
-           label='S-units (d=dmax)');
+ax.scatter(X["su"], Y["su"], marker='^', s=10, facecolor='None', edgecolor='purple',
+           label='Full S-units') ;
+# Draw CDW 
+ax.scatter(X["all"], Y["cdw"], marker="p", s=3, color='red',
+           label='CDW');
+# Draw asymptotic lower bound DPW
+ax.scatter(X["all"], Y["low_dpw"], marker=".", s=3, color='green',
+           label='Lower bound for CDW');
 
 # Legends/...
 plt.ylabel('Approximation Factor (under GH)');
@@ -83,51 +88,20 @@ ax.set_axisbelow(True);
 ax.xaxis.grid(color='lightgray', linestyle='dashed');
 ax.set_axisbelow(True);
 ax.yaxis.grid(color='lightgray', linestyle='dashed');
-ax.set_ylim([0,40]);
-
-handles, labels = ax.get_legend_handles_labels();
-plt.legend(handles, labels, loc='upper left',fontsize=12);
-
-# Save
-plt.savefig(figure_dir + "/GF-mprandom2.png", bbox_inches='tight')
-plt.close(fig)
-print("Done: minGF as fonction of field dimension");
-
-
-
-# --------------------------------------------------------------------------------------
-# Draw the zoom (without URS)
-fig, ax = plt.subplots(figsize=(9.5, 4)) 
-
-# Draw sat and su
-ax.scatter(X["all"], Y["sat"], marker='o', s=20, color='orange',
-           label='2-saturated URS (d=1)');
-ax.scatter(X["su"], Y["su"], marker='^', s=20, facecolor='None', edgecolor='purple',
-           label='S-units (d=dmax)');
-
-# Legends/...
-plt.ylabel('Approximation Factor (under GH)');
-plt.xlabel('Cyclotomic field degree');
-leg = ax.legend(ncol=1, fontsize=14);
-ax.set_axisbelow(True);
-ax.xaxis.grid(color='lightgray', linestyle='dashed');
-ax.set_axisbelow(True);
-ax.yaxis.grid(color='lightgray', linestyle='dashed');
-ax.set_xlim([20,101]);
-ax.set_ylim([0,4]);
+ax.set_ylim([0,60]);
 
 handles, labels = ax.get_legend_handles_labels();
 plt.legend(handles, labels, loc='upper left', fontsize=12);
 
 # Save
-plt.savefig(figure_dir + "/zoomGF-mprandom2.png", bbox_inches='tight');
+plt.savefig(figure_dir + "/GF_CDW-mprandom2_intro.png", bbox_inches='tight');
 plt.close(fig);
-print("Done: zoom minGF as fonction of field dimension"); 
+print("Done: minGF as fonction of field dimension (with CDW data) [figure for intro]");
 
 
 
 # --------------------------------------------------------------------------------------
-# Draw with CDW and CDW lower bound
+# Draw with CDW and CDW lower bound for inside the article
 fig, ax = plt.subplots(figsize=(9.5, 4)) 
 
 # Draw URS 
@@ -135,7 +109,7 @@ ax.scatter(X["all"], Y["urs"], marker="s", s=10, color='b',
            label='URS (d=1)');
 # Draw sat 
 ax.scatter(X["all"], Y["sat"], marker='o', s=10, color='orange',
-           label='2-saturated URS (d=1)');
+           label='2-saturated URS');
 # Draw su 
 ax.scatter(X["su"], Y["su"], marker='^', s=10, facecolor='None', edgecolor='purple',
            label='S-units (d=dmax)') ;
@@ -154,7 +128,7 @@ ax.set_axisbelow(True);
 ax.xaxis.grid(color='lightgray', linestyle='dashed');
 ax.set_axisbelow(True);
 ax.yaxis.grid(color='lightgray', linestyle='dashed');
-ax.set_ylim([0,40]);
+ax.set_ylim([0,60]);
 
 handles, labels = ax.get_legend_handles_labels();
 plt.legend(handles, labels, loc='upper left', fontsize=12);
@@ -162,46 +136,8 @@ plt.legend(handles, labels, loc='upper left', fontsize=12);
 # Save
 plt.savefig(figure_dir + "/GF_CDW-mprandom2.png", bbox_inches='tight');
 plt.close(fig);
-print("Done: minGF as fonction of field dimension (with CDW data)");
+print("Done: minGF as fonction of field dimension (with CDW data) [figure for inside article]");
 
-
-# --------------------------------------------------------------------------------------
-# Draw with CDW and CDW lower bound, without URS
-fig, ax = plt.subplots(figsize=(9.5, 4)) 
-
-# # Draw URS 
-# ax.scatter(X["all"], Y["urs"], marker="s", s=10, color='b',
-#            label='URS (d=1)');
-# Draw sat 
-ax.scatter(X["all"], Y["sat"], marker='o', s=10, color='orange',
-           label='2-saturated URS (d=1)');
-# Draw su 
-ax.scatter(X["su"], Y["su"], marker='^', s=10, facecolor='None', edgecolor='purple',
-           label='S-units (d=dmax)') ;
-# Draw CDW 
-ax.scatter(X["all"], Y["cdw"], marker="p", s=3, color='red',
-           label='CDW (d=1)');
-# Draw asymptotic lower bound DPW
-ax.scatter(X["all"], Y["low_dpw"], marker=".", s=3, color='green',
-           label='CDW lower bound (d=1)');
-
-# Legends/...
-plt.ylabel('Approximation Factor (under GH)');
-plt.xlabel('Cyclotomic field degree');
-leg = ax.legend(ncol=1, fontsize=14);
-ax.set_axisbelow(True);
-ax.xaxis.grid(color='lightgray', linestyle='dashed');
-ax.set_axisbelow(True);
-ax.yaxis.grid(color='lightgray', linestyle='dashed');
-ax.set_ylim([0,40]);
-
-handles, labels = ax.get_legend_handles_labels();
-plt.legend(handles, labels, loc='upper left', fontsize=12);
-
-# Save
-plt.savefig(figure_dir + "/GF_CDW_noURS-mprandom2.png", bbox_inches='tight');
-plt.close(fig);
-print("Done: minGF as fonction of field dimension (with CDW data)");
 
 
 # --------------------------------------------------------------------------------------

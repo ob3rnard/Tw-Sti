@@ -27,7 +27,7 @@ __FPLLL_PATH = "/usr/local/bin/";
 
 ### Computational workflow
 
-Note that `./data/list_ms_pcmp` contains the list of cyclotomic fields conductors for which h+=1 is known/computable, and of degree 20 < n < 210.
+Note that `./data/list_ms_pcmp` contains the list of cyclotomic fields conductors for which h+=1 is known/computable, and of degree 21 < n < 211.
 
 For simplicity, we suppose that everything is executed from `./scripts`, but it should work from everywhere. The conductor of the targetted cyclotomic field is `<m>`. Each script accepts a list of conductors, but beware that one or several threads will be launched for **each** of the conductors in the list.
 
@@ -82,7 +82,7 @@ Run the `plot_preproc.sage` and then the `plot_minGF.py` script:
 ./plot_preproc.sage
 ./plot_minGF.py
 ```
-This creates files `GF_CDW_noURS-mprandom2.png` (Fig.1.1), `GF_CDW-mprandom2.png` (Fig.5.2) and `zoomGF_with_cdw_lower-mprandom2.png` (Fig.5.3) in folder `./figures`.
+This creates files `GF_CDW-mprandom2_intro.png` (Fig.1.1), `GF_CDW-mprandom2.png` (Fig.5.2) and `zoomGF_with_cdw_lower-mprandom2.png` (Fig.5.3) in folder `./figures`.
 
 
 ##### Obtaining Fig. 5.1, C.1-3
@@ -126,7 +126,7 @@ This will redirect logs, detach thread(s), detect the number of orbits and the a
 `.su`| S-units, complete group when available (up to degree 80)
 `.lat`,`.lat_gso`| Lattice diretly obtained after Twisted-PHS-like construction 
 `.lll`, `.lll_U`,`.lll_gso`| LLL Version of the above, with unitary transformation
-`.bkz-<bk>`, `.bkz-<bk>_U`,`.bkz-<bk>_gso`| BKZ reduction of block size bk, with unitary transformation
+`.bkz-<bk>`, `.bkz-<bk>_U`,`.bkz-<bk>_gso`| BKZ reduction of block size bk, with unitary transformation and Gram-Schmidt Orthogonalization
 `.geo`| Tables of all geometric indicators for this conductor
 `.gsn`| Gram-Schmidt log norms (each gsn file contains data for raw/lll/bkz lattice for one given option)
 `.afinf`,`.gf`,`.afsup`,`.hf`| Estimated approximation factors (Minkowski, Gaussian Heuristic, AGM inequality, Hermite Factor
