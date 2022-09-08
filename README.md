@@ -1,7 +1,7 @@
 # Tw-STI
-Code in support of the IACR ePrint Archive [ePrint:2021/1384](https://eprint.iacr.org/2021/1384):
+Code given in support of ASIACRYPT 2022 paper, available on the IACR ePrint Archive [ePrint:2021/1384](https://eprint.iacr.org/2021/1384):
 
-> **Log-S-unit lattices using Explicit Stickelberger Generators to solve Approx Ideal-SVP**  
+> **Log-S-unit Lattices Using Explicit Stickelberger Generators to Solve Approx Ideal-SVP**
 > Olivier Bernard, Andrea Lesavourey, Tuong-Huy Nguyen and Adeline Roux-Langlois
 
 This work is supported by the European Union PROMETHEUS project (Horizon 2020 Research and Innovation Program, grant 780701).
