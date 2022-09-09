@@ -23,7 +23,7 @@ if len(sys.argv) != 6:
     print(("Usage: {:s} <data_root> z<m> <d> sat=[true/false] su=[true/false]\n"+
            "\tfor Cyclotomic Field of conductor <m>\n"+
            "\tfor Factor Bases consisting of a maximum of <d> (split prime) orbits\n"+
-	   "\tsat/su: precise whether we have saturated elements and/or full S-units <b>")
+	   "\tsat/su: precise whether we have saturated elements and/or full S-units<b>")
           .format(sys.argv[0]));
     sys.exit(2);
 

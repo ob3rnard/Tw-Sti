@@ -82,7 +82,7 @@ Run the `plot_preproc.sage` and then the `plot_minGF.py` script:
 ./plot_preproc.sage
 ./plot_minGF.py
 ```
-This creates files `GF_CDW-mprandom2_intro.png` (Fig.1.1), `GF_CDW-mprandom2.png` (Fig.5.2) and `zoomGF_with_cdw_lower-mprandom2.png` (Fig.5.3) in folder `./figures`.
+This creates files `GF_CDW-mprandom2_intro.png` (Fig.1.1), `GF_CDW-mprandom2.png` (Fig.5.3) and `zoomGF_with_cdw_lower-mprandom2.png` (Fig.5.4) in folder `./figures`.
 
 
 ##### Obtaining Fig. 5.1, C.1-3

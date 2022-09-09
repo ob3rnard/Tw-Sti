@@ -21,7 +21,7 @@ if len(sys.argv) != 6:
     print(("Usage: {:s} <data_root> z<m> <d> sat=[true/false] su=[true/false]\n"+
            "\tfor Cyclotomic Field of conductor <m>\n"+
            "\tfor Factor Bases consisting of a maximum of <d> (split prime) orbits\n"+
-	   "\tsat/su: precise whether we have saturated elements and/or full S-units <b>")
+	   "\tsat/su: precise whether we have saturated elements and/or full S-units<b>")
           .format(sys.argv[0]));
     sys.exit(2);
 
@@ -37,8 +37,11 @@ b_su  = True if sys.argv[5] == "su=true"  else False;
 opt_iso = { "iso": True,       "noiso": False };
 opt_inf = { "exp": "EXPANDED", "tw"   : "TWISTED" };
 
-# Precision of output. Conservative value (but we can)
-HPREC=5000;
+# opt_iso = {"noiso": False};
+# opt_inf = {"exp": "EXPANDED"};
+
+# Precision of output.
+HPREC=500;
  
 
 # -------------------------------------------------------------------------------------
@@ -61,13 +64,11 @@ assert(all(os.path.exists(_pcmp_file) for _pcmp_file in [inf_places_file] + fb_f
 # ----------------------------------------------------------------------------------
 # Read Infinite places
 phi = inf_places_read_data(inf_places_file, K);
-# phi = adapt_inf_places(K, phi, to_prec=HPREC);
 
 
 # ----------------------------------------------------------------------------------
 # Loop on #orbits (fb), then on urs/sat/su then on iso/inf parameters
-# for d in range(dmax):
-for d in [dmax-1]: # range(dmax):
+for d in [dmax-1]:
     # ---------------------------------------
     # Read Factor Base
     fb  = fb_read_data(fb_files[d], K);
