@@ -1,5 +1,9 @@
 #!/usr/bin/env sage
 
+# Code in support of ePrint:2021/1384
+# Copyright 2021, Olivier Bernard, Andrea Lesavourey, Tuong-Huy Nguyen
+# GPL-3.0-only (see LICENSE file)
+
 # Small convenient hack to simulate as if we were always executing from '<trunk>/'
 import os
 import sys
